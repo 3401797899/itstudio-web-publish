@@ -1,6 +1,7 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getGlobalConfig, updateGlobalConfig } from '../../api/config'
 
 const formData = reactive({
   cloudFlareTunnelId: '',
@@ -35,12 +36,58 @@ const handleSubmit = async () => {
   
   try {
     await formRef.value.validate()
-    // TODO: 实现保存配置的逻辑
+    const apiData = {
+      cloudflare_tunnel_id: formData.cloudFlareTunnelId,
+      cloudflare_token: formData.cloudFlareToken,
+      config_yml_path: formData.configYmlPath,
+      tencent_secret_key: formData.tencentSecretKey,
+      tencent_secret_id: formData.tencentSecretId
+    }
+    await updateGlobalConfig(apiData)
     ElMessage.success('配置保存成功')
   } catch (error) {
-    ElMessage.error('请检查表单填写是否正确')
+    if (error.response && error.response.data) {
+      const errorData = error.response.data
+      const errorMessages = []
+      
+      // 处理每个字段的错误信息
+      Object.entries(errorData).forEach(([field, messages]) => {
+        if (Array.isArray(messages) && messages.length > 0) {
+          const fieldMap = {
+            cloudflare_tunnel_id: 'Cloud Flare Tunnel ID',
+            cloudflare_token: 'Cloud Flare Token',
+            config_yml_path: 'config.yml路径',
+            tencent_secret_key: '腾讯云SecretKey',
+            tencent_secret_id: '腾讯云SecretID'
+          }
+          errorMessages.push(`${fieldMap[field] || field}：${messages[0]}`)
+        }
+      })
+      
+      if (errorMessages.length > 0) {
+        ElMessage.error(errorMessages.join('\n'))
+      } else {
+        ElMessage.error('保存配置失败')
+      }
+    } else {
+      ElMessage.error(error.message || '保存配置失败')
+    }
   }
 }
+
+onMounted(async () => {
+  try {
+    const config = await getGlobalConfig()
+    // 映射API返回的数据到表单字段
+    formData.cloudFlareTunnelId = config.cloudflare_tunnel_id
+    formData.cloudFlareToken = config.cloudflare_token
+    formData.configYmlPath = config.config_yml_path
+    formData.tencentSecretKey = config.tencent_secret_key
+    formData.tencentSecretId = config.tencent_secret_id
+  } catch (error) {
+    ElMessage.error('获取配置失败')
+  }
+})
 </script>
 
 <template>
