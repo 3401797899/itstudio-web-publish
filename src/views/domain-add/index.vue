@@ -15,7 +15,8 @@ const editIndex = ref(-1)
 const formData = reactive({
   domain: '',
   proxyIp: '',
-  host: ''
+  host: '',
+  remark: ''
 })
 
 // 表单验证规则
@@ -25,11 +26,11 @@ const rules = {
     { pattern: /^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$/, message: '请输入有效的域名', trigger: 'blur' }
   ],
   proxyIp: [
-    { required: true, message: '请输入反代IP', trigger: 'blur' },
-    { pattern: /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/, message: '请输入有效的IP地址', trigger: 'blur' }
+    { required: true, message: '请输入反代地址', trigger: 'blur' },
+    { pattern: /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?):(6553[0-5]|655[0-2]\d|65[0-4]\d{2}|6[0-4]\d{3}|[1-5]\d{4}|[1-9]\d{0,3})$/, message: '请输入有效的地址格式（IP:Port）', trigger: 'blur' }
   ],
-  host: [
-  ]
+  host: [],
+  remark: []
 }
 
 const formRef = ref(null)
@@ -92,7 +93,8 @@ const resetForm = () => {
   Object.assign(formData, {
     domain: '',
     proxyIp: '',
-    host: ''
+    host: '',
+    remark: ''
   })
 }
 </script>
@@ -109,8 +111,9 @@ const resetForm = () => {
 
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="domain" label="域名" min-width="200" />
-        <el-table-column prop="proxyIp" label="反代IP" min-width="150" />
+        <el-table-column prop="proxyIp" label="反代地址" min-width="150" />
         <el-table-column prop="host" label="Host" min-width="200" />
+        <el-table-column prop="remark" label="备注" min-width="200" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row, $index }">
             <el-button type="primary" link @click="handleEdit(row, $index)">编辑</el-button>
@@ -136,11 +139,14 @@ const resetForm = () => {
           <el-form-item label="域名" prop="domain">
             <el-input v-model="formData.domain" placeholder="请输入域名" />
           </el-form-item>
-          <el-form-item label="反代IP" prop="proxyIp">
-            <el-input v-model="formData.proxyIp" placeholder="请输入反代IP" />
+          <el-form-item label="反代地址" prop="proxyIp">
+            <el-input v-model="formData.proxyIp" placeholder="请输入反代地址（IP:Port）" />
           </el-form-item>
           <el-form-item label="Host" prop="host">
             <el-input v-model="formData.host" placeholder="请输入Host" />
+          </el-form-item>
+          <el-form-item label="备注" prop="remark">
+            <el-input v-model="formData.remark" placeholder="请输入备注" />
           </el-form-item>
         </el-form>
         <template #footer>
