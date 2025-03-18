@@ -157,8 +157,8 @@ const resetForm = () => {
 <style scoped>
 .domain-add-container {
   padding: 20px;
-  height: calc(90% - 40px);
-  width: calc(90% - 40px);
+  height: calc(95% - 40px);
+  width: calc(95% - 40px);
 }
 
 .domain-card {

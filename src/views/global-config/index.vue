@@ -112,8 +112,8 @@ const handleSubmit = async () => {
 <style scoped>
 .global-config-container {
   padding: 20px;
-  height: calc(90vh - 40px);
-  width: calc(90vw - 40px);
+  height: calc(95% - 40px);
+  width: calc(95% - 40px);
 }
 
 .config-card {
