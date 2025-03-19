@@ -27,6 +27,8 @@ request.interceptors.response.use(
   }
 )
 
+export default request
+
 // 获取全局配置
 export function getGlobalConfig() {
   return request({

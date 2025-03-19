@@ -1,6 +1,7 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getDomainList, addDomain, updateDomain, deleteDomain } from '../../api/domain'
 
 // 表格数据
 const tableData = ref([])
@@ -14,9 +15,9 @@ const editIndex = ref(-1)
 // 表单数据
 const formData = reactive({
   domain: '',
-  proxyIp: '',
+  proxy_pass: '',
   host: '',
-  remark: ''
+  note: ''
 })
 
 // 表单验证规则
@@ -25,15 +26,28 @@ const rules = {
     { required: true, message: '请输入域名', trigger: 'blur' },
     { pattern: /^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$/, message: '请输入有效的域名', trigger: 'blur' }
   ],
-  proxyIp: [
-    { required: true, message: '请输入反代地址', trigger: 'blur' },
-    { pattern: /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?):(6553[0-5]|655[0-2]\d|65[0-4]\d{2}|6[0-4]\d{3}|[1-5]\d{4}|[1-9]\d{0,3})$/, message: '请输入有效的地址格式（IP:Port）', trigger: 'blur' }
+  proxy_pass: [
+    { required: true, message: '请输入反代地址', trigger: 'blur' }
   ],
   host: [],
-  remark: []
+  note: []
 }
 
 const formRef = ref(null)
+
+// 获取域名列表
+const fetchDomainList = async () => {
+  try {
+    const data = await getDomainList()
+    tableData.value = data
+  } catch (error) {
+    ElMessage.error('获取域名列表失败')
+  }
+}
+
+onMounted(() => {
+  fetchDomainList()
+})
 
 // 打开添加对话框
 const handleAdd = () => {
@@ -53,14 +67,19 @@ const handleEdit = (row, index) => {
 }
 
 // 删除确认
-const handleDelete = (index) => {
+const handleDelete = (row, index) => {
   ElMessageBox.confirm('确认删除该域名配置吗？', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    tableData.value.splice(index, 1)
-    ElMessage.success('删除成功')
+  }).then(async () => {
+    try {
+      await deleteDomain(row.id)
+      tableData.value.splice(index, 1)
+      ElMessage.success('删除成功')
+    } catch (error) {
+      ElMessage.error(error.response?.data?.message || '删除失败')
+    }
   }).catch(() => {})
 }
 
@@ -72,16 +91,18 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     if (isEdit.value) {
       // 编辑模式
-      Object.assign(tableData.value[editIndex.value], formData)
+      const updatedData = await updateDomain(tableData.value[editIndex.value].id, formData)
+      Object.assign(tableData.value[editIndex.value], updatedData)
       ElMessage.success('修改成功')
     } else {
       // 添加模式
-      tableData.value.push({ ...formData })
+      const newDomain = await addDomain(formData)
+      tableData.value.push(newDomain)
       ElMessage.success('添加成功')
     }
     dialogVisible.value = false
   } catch (error) {
-    ElMessage.error('请检查表单填写是否正确')
+    ElMessage.error(error.response?.data?.message || '操作失败')
   }
 }
 
@@ -92,9 +113,9 @@ const resetForm = () => {
   }
   Object.assign(formData, {
     domain: '',
-    proxyIp: '',
+    proxy_pass: '',
     host: '',
-    remark: ''
+    note: ''
   })
 }
 </script>
@@ -111,13 +132,13 @@ const resetForm = () => {
 
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="domain" label="域名" min-width="200" />
-        <el-table-column prop="proxyIp" label="反代地址" min-width="150" />
+        <el-table-column prop="proxy_pass" label="反代地址" min-width="150" />
         <el-table-column prop="host" label="Host" min-width="200" />
-        <el-table-column prop="remark" label="备注" min-width="200" />
+        <el-table-column prop="note" label="备注" min-width="200" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row, $index }">
             <el-button type="primary" link @click="handleEdit(row, $index)">编辑</el-button>
-            <el-button type="danger" link @click="handleDelete($index)">删除</el-button>
+            <el-button type="danger" link @click="handleDelete(row, $index)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -139,14 +160,14 @@ const resetForm = () => {
           <el-form-item label="域名" prop="domain">
             <el-input v-model="formData.domain" placeholder="请输入域名" />
           </el-form-item>
-          <el-form-item label="反代地址" prop="proxyIp">
-            <el-input v-model="formData.proxyIp" placeholder="请输入反代地址（IP:Port）" />
+          <el-form-item label="反代地址" prop="proxy_pass">
+            <el-input v-model="formData.proxy_pass" placeholder="请输入反代地址" />
           </el-form-item>
           <el-form-item label="Host" prop="host">
             <el-input v-model="formData.host" placeholder="请输入Host" />
           </el-form-item>
-          <el-form-item label="备注" prop="remark">
-            <el-input v-model="formData.remark" placeholder="请输入备注" />
+          <el-form-item label="备注" prop="note">
+            <el-input v-model="formData.note" placeholder="请输入备注" />
           </el-form-item>
         </el-form>
         <template #footer>
