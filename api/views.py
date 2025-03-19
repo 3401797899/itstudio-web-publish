@@ -91,7 +91,7 @@ class DomainConfigPreviewView(generics.GenericAPIView):
                 # 如果有host，添加httpHostHeader
                 domain_config = {
                     'hostname': domain.domain,
-                    'service': domain.proxy_pass,
+                    'service': "http://" + domain.proxy_pass,
                     'originRequest': {
                         'httpHostHeader': domain.host
                     }
@@ -100,13 +100,13 @@ class DomainConfigPreviewView(generics.GenericAPIView):
                 # 如果没有host，使用基本配置
                 domain_config = {
                     'hostname': domain.domain,
-                    'service': domain.proxy_pass
+                    'service': "http://" + domain.proxy_pass
                 }
             tunnel_config['ingress'].append(domain_config)
         
         # 添加默认路由
         tunnel_config['ingress'].append({
-            'service': 'http_status:404'
+            'service': config.cloudflared_default_behavior
         })
         
         # 转换为YAML格式
