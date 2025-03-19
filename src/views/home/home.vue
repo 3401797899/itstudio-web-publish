@@ -62,7 +62,7 @@ onMounted(() => {
       <div class="welcome-content">
         <h2>{{ greeting }}，管理员</h2>
         <p class="current-time">{{ currentTime }}</p>
-        <p class="welcome-text">欢迎使用爱特工作室域名管理系统</p>
+        <p class="welcome-text">欢迎使用爱特工作室网站发布系统</p>
       </div>
     </el-card>
 
