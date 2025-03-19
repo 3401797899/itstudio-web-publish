@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { DataLine, Link } from '@element-plus/icons-vue'
+import { getDomainList } from '../../api/domain'
 
 const domainCount = ref(0)
 const greeting = ref('')
@@ -31,9 +32,14 @@ const updateTime = () => {
   currentTime.value = now.toLocaleDateString('zh-CN', options)
 }
 
-const fetchDomainCount = () => {
-  // TODO: 从后端API获取域名数量
-  domainCount.value = 10
+const fetchDomainCount = async () => {
+  try {
+    const domains = await getDomainList()
+    domainCount.value = domains.length
+  } catch (error) {
+    console.error('获取域名数量失败:', error)
+    domainCount.value = 0
+  }
 }
 
 onMounted(() => {
