@@ -5,7 +5,10 @@ from .serializers import ConfigurationSerializer, DomainConfigSerializer
 from .utils.cloudflare import CloudflareClient
 from .utils.dnspod import DNSPodClient
 from tencentcloud.dnspod.v20210323 import models
+from django.conf import settings
 import logging
+import yaml
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +66,102 @@ class DomainConfigListCreateView(generics.ListCreateAPIView):
         except Exception as e:
             logger.error(f"Failed to update DNS records: {str(e)}")
             raise
+
+class DomainConfigPreviewView(generics.GenericAPIView):
+    def generate_tunnel_config(self, config, domains):
+        """生成Cloudflare Tunnel的配置
+
+        Args:
+            config (ConfigurationModel): 配置模型实例
+            domains (QuerySet): DomainConfig查询集
+
+        Returns:
+            str: YAML格式的配置字符串
+        """
+        # 构建基础配置
+        tunnel_config = {
+            'tunnel': config.cloudflare_tunnel_id,
+            'credentials-file': f'/etc/cloudflared/{config.cloudflare_tunnel_id}.json',
+            'ingress': []
+        }
+        
+        # 为每个域名生成配置
+        for domain in domains:
+            if domain.host:
+                # 如果有host，添加httpHostHeader
+                domain_config = {
+                    'hostname': domain.domain,
+                    'service': domain.proxy_pass,
+                    'originRequest': {
+                        'httpHostHeader': domain.host
+                    }
+                }
+            else:
+                # 如果没有host，使用基本配置
+                domain_config = {
+                    'hostname': domain.domain,
+                    'service': domain.proxy_pass
+                }
+            tunnel_config['ingress'].append(domain_config)
+        
+        # 添加默认路由
+        tunnel_config['ingress'].append({
+            'service': 'http_status:404'
+        })
+        
+        # 转换为YAML格式
+        return yaml.dump(tunnel_config, allow_unicode=True, sort_keys=False)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # 获取最新的配置
+            config = ConfigurationModel.objects.latest('updated_at')
+            # 获取所有域名配置
+            domains = DomainConfig.objects.all()
+            
+            # 生成配置
+            yaml_config = self.generate_tunnel_config(config, domains)
+            
+            return Response(yaml_config)
+        except ConfigurationModel.DoesNotExist:
+            return Response({'error': '未找到配置信息'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+class DomainConfigWriteView(generics.GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            # 获取最新的配置
+            config = ConfigurationModel.objects.latest('updated_at')
+            # 获取所有域名配置
+            domains = DomainConfig.objects.all()
+            
+            # 生成配置
+            preview_view = DomainConfigPreviewView()
+            yaml_config = preview_view.generate_tunnel_config(config, domains)
+            
+            config_yml_path = os.path.join(settings.BASE_DIR, config.config_yml_path)
+
+            # 确保配置文件路径存在
+            config_dir = os.path.dirname(config_yml_path)
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir)
+            
+            # 写入配置文件
+            with open(config_yml_path, 'w', encoding='utf-8') as f:
+                f.write(yaml_config)
+            
+            return Response({'message': '配置文件已成功写入'})
+        except ConfigurationModel.DoesNotExist:
+            return Response({'error': '未找到配置信息'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+        except Exception as e:
+            logger.error(f"Failed to generate preview config: {str(e)}")
+            return Response(
+                {'detail': 'Failed to generate preview config.'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class DomainConfigRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = DomainConfig.objects.all()
