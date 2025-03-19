@@ -5,7 +5,9 @@ import { getGlobalConfig, updateGlobalConfig } from '../../api/config'
 
 const formData = reactive({
   cloudFlareTunnelId: '',
-  cloudFlareToken: '',
+  cloudFlareGlobalApiKey: '',
+  cloudFlareEmail: '',
+  cloudFlareZoneId: '',
   configYmlPath: '',
   tencentSecretKey: '',
   tencentSecretId: ''
@@ -13,10 +15,17 @@ const formData = reactive({
 
 const rules = {
   cloudFlareTunnelId: [
-    { required: true, message: '请输入Cloud Flare Tunnel ID', trigger: 'blur' }
+    { required: true, message: '请输入CloudFlare Tunnel ID', trigger: 'blur' }
   ],
-  cloudFlareToken: [
-    { required: true, message: '请输入Cloud Flare Token', trigger: 'blur' }
+  cloudFlareGlobalApiKey: [
+    { required: true, message: '请输入CloudFlare Global API Key', trigger: 'blur' }
+  ],
+  cloudFlareEmail: [
+    { required: true, message: '请输入CloudFlare Email', trigger: 'blur' },
+    { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
+  ],
+  cloudFlareZoneId: [
+    { required: true, message: '请输入域名Zone ID', trigger: 'blur' }
   ],
   configYmlPath: [
     { required: true, message: '请输入config.yml路径', trigger: 'blur' }
@@ -38,7 +47,9 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     const apiData = {
       cloudflare_tunnel_id: formData.cloudFlareTunnelId,
-      cloudflare_token: formData.cloudFlareToken,
+      cloudflare_global_api_key: formData.cloudFlareGlobalApiKey,
+      cloudflare_email: formData.cloudFlareEmail,
+      cloudflare_zone_id: formData.cloudFlareZoneId,
       config_yml_path: formData.configYmlPath,
       tencent_secret_key: formData.tencentSecretKey,
       tencent_secret_id: formData.tencentSecretId
@@ -54,8 +65,10 @@ const handleSubmit = async () => {
       Object.entries(errorData).forEach(([field, messages]) => {
         if (Array.isArray(messages) && messages.length > 0) {
           const fieldMap = {
-            cloudflare_tunnel_id: 'Cloud Flare Tunnel ID',
-            cloudflare_token: 'Cloud Flare Token',
+            cloudflare_tunnel_id: 'CloudFlare Tunnel ID',
+            cloudflare_global_api_key: 'CloudFlare Global API Key',
+            cloudflare_email: 'CloudFlare Email',
+            cloudflare_zone_id: '域名Zone ID',
             config_yml_path: 'config.yml路径',
             tencent_secret_key: '腾讯云SecretKey',
             tencent_secret_id: '腾讯云SecretID'
@@ -80,7 +93,9 @@ onMounted(async () => {
     const config = await getGlobalConfig()
     // 映射API返回的数据到表单字段
     formData.cloudFlareTunnelId = config.cloudflare_tunnel_id
-    formData.cloudFlareToken = config.cloudflare_token
+    formData.cloudFlareGlobalApiKey = config.cloudflare_global_api_key
+    formData.cloudFlareEmail = config.cloudflare_email
+    formData.cloudFlareZoneId = config.cloudflare_zone_id
     formData.configYmlPath = config.config_yml_path
     formData.tencentSecretKey = config.tencent_secret_key
     formData.tencentSecretId = config.tencent_secret_id
@@ -103,23 +118,37 @@ onMounted(async () => {
         ref="formRef"
         :model="formData"
         :rules="rules"
-        label-width="180px"
+        label-width="200px"
         label-position="left"
         class="config-form"
       >
-        <el-form-item label="Cloud Flare Tunnel ID" prop="cloudFlareTunnelId">
+        <el-form-item label="CloudFlare Tunnel ID" prop="cloudFlareTunnelId">
           <el-input
             v-model="formData.cloudFlareTunnelId"
-            placeholder="请输入Cloud Flare Tunnel ID"
+            placeholder="请输入CloudFlare Tunnel ID"
           />
         </el-form-item>
 
-        <el-form-item label="Cloud Flare Token" prop="cloudFlareToken">
+        <el-form-item label="CloudFlare Global API Key" prop="cloudFlareGlobalApiKey">
           <el-input
-            v-model="formData.cloudFlareToken"
+            v-model="formData.cloudFlareGlobalApiKey"
             type="password"
-            placeholder="请输入Cloud Flare Token"
+            placeholder="请输入CloudFlare Global API Key"
             show-password
+          />
+        </el-form-item>
+
+        <el-form-item label="CloudFlare Email" prop="cloudFlareEmail">
+          <el-input
+            v-model="formData.cloudFlareEmail"
+            placeholder="请输入CloudFlare Email"
+          />
+        </el-form-item>
+
+        <el-form-item label="域名Zone ID" prop="cloudFlareZoneId">
+          <el-input
+            v-model="formData.cloudFlareZoneId"
+            placeholder="请输入域名Zone ID"
           />
         </el-form-item>
 
