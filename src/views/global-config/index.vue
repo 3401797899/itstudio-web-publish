@@ -10,8 +10,17 @@ const formData = reactive({
   cloudFlareZoneId: '',
   configYmlPath: '',
   tencentSecretKey: '',
-  tencentSecretId: ''
+  tencentSecretId: '',
+  cloudflaredContainerId: '',
+  cloudflaredDefaultBehavior: ''
 })
+
+const defaultBehaviorOptions = [
+  { label: '200', value: 'http_status:200' },
+  { label: '204', value: 'http_status:204' },
+  { label: '404', value: 'http_status:404' },
+  { label: 'hello_world', value: 'hello_world' }
+]
 
 const rules = {
   cloudFlareTunnelId: [
@@ -35,6 +44,12 @@ const rules = {
   ],
   tencentSecretId: [
     { required: true, message: '请输入腾讯云SecretID', trigger: 'blur' }
+  ],
+  cloudflaredContainerId: [
+    { required: true, message: '请输入Cloudflared容器ID', trigger: 'blur' }
+  ],
+  cloudflaredDefaultBehavior: [
+    { required: true, message: '请选择默认行为', trigger: 'change' }
   ]
 }
 
@@ -52,7 +67,9 @@ const handleSubmit = async () => {
       cloudflare_zone_id: formData.cloudFlareZoneId,
       config_yml_path: formData.configYmlPath,
       tencent_secret_key: formData.tencentSecretKey,
-      tencent_secret_id: formData.tencentSecretId
+      tencent_secret_id: formData.tencentSecretId,
+      cloudflared_container_id: formData.cloudflaredContainerId,
+      cloudflared_default_behavior: formData.cloudflaredDefaultBehavior
     }
     await updateGlobalConfig(apiData)
     ElMessage.success('配置保存成功')
@@ -71,7 +88,9 @@ const handleSubmit = async () => {
             cloudflare_zone_id: '域名Zone ID',
             config_yml_path: 'config.yml路径',
             tencent_secret_key: '腾讯云SecretKey',
-            tencent_secret_id: '腾讯云SecretID'
+            tencent_secret_id: '腾讯云SecretID',
+            cloudflared_container_id: 'Cloudflared容器ID',
+            cloudflared_default_behavior: '默认行为'
           }
           errorMessages.push(`${fieldMap[field] || field}：${messages[0]}`)
         }
@@ -99,6 +118,8 @@ onMounted(async () => {
     formData.configYmlPath = config.config_yml_path
     formData.tencentSecretKey = config.tencent_secret_key
     formData.tencentSecretId = config.tencent_secret_id
+    formData.cloudflaredContainerId = config.cloudflared_container_id
+    formData.cloudflaredDefaultBehavior = config.cloudflared_default_behavior
   } catch (error) {
     ElMessage.error('获取配置失败')
   }
@@ -175,6 +196,27 @@ onMounted(async () => {
             placeholder="请输入腾讯云SecretID"
             show-password
           />
+        </el-form-item>
+
+        <el-form-item label="Cloudflared容器ID" prop="cloudflaredContainerId">
+          <el-input
+            v-model="formData.cloudflaredContainerId"
+            placeholder="请输入Cloudflared容器ID"
+          />
+        </el-form-item>
+
+        <el-form-item label="默认行为" prop="cloudflaredDefaultBehavior">
+          <el-select
+            v-model="formData.cloudflaredDefaultBehavior"
+            placeholder="请选择默认行为"
+          >
+            <el-option
+              v-for="option in defaultBehaviorOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </el-select>
         </el-form-item>
 
         <el-form-item>

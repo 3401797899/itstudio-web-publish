@@ -1,7 +1,45 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getDomainList, addDomain, updateDomain, deleteDomain } from '../../api/domain'
+import { getDomainList, addDomain, updateDomain, deleteDomain, previewConfig, writeConfig, restartCloudflared } from '../../api/domain'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
+import 'highlight.js/lib/languages/yaml'
+
+// 配置预览对话框
+const previewDialogVisible = ref(false)
+const configContent = ref('')
+
+// 预览配置文件
+const handlePreview = async () => {
+  try {
+    const data = await previewConfig();
+    configContent.value = hljs.highlight(data, { language: 'yaml' }).value
+    previewDialogVisible.value = true
+  } catch (error) {
+    ElMessage.error('获取配置预览失败')
+  }
+}
+
+// 写入配置文件
+const handleWrite = async () => {
+  try {
+    await writeConfig()
+    ElMessage.success('配置文件写入成功')
+  } catch (error) {
+    ElMessage.error('配置文件写入失败')
+  }
+}
+
+// 重启Cloudflared服务
+const handleRestart = async () => {
+  try {
+    await restartCloudflared()
+    ElMessage.success('Cloudflared服务重启成功')
+  } catch (error) {
+    ElMessage.error('Cloudflared服务重启失败')
+  }
+}
 
 // 表格数据
 const tableData = ref([])
@@ -126,7 +164,12 @@ const resetForm = () => {
       <template #header>
         <div class="card-header">
           <h2>域名管理</h2>
-          <el-button type="primary" @click="handleAdd">添加域名</el-button>
+          <div class="header-buttons">
+            <el-button type="info" @click="handlePreview">预览配置文件</el-button>
+            <el-button type="success" @click="handleWrite">写入配置文件</el-button>
+            <el-button type="warning" @click="handleRestart">重启Cloudflared</el-button>
+            <el-button type="primary" @click="handleAdd">添加域名</el-button>
+          </div>
         </div>
       </template>
 
@@ -177,6 +220,15 @@ const resetForm = () => {
           </span>
         </template>
       </el-dialog>
+
+      <!-- 配置预览对话框 -->
+      <el-dialog
+        v-model="previewDialogVisible"
+        title="配置文件预览"
+        width="800px"
+      >
+        <pre class="preview-code"><code v-html="configContent"></code></pre>
+      </el-dialog>
     </el-card>
   </div>
 </template>
@@ -198,6 +250,30 @@ const resetForm = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.preview-code {
+  margin: 0;
+  padding: 16px;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: auto;
+  height: calc(70vh - 120px);
+  width: calc(100% - 32px);
+}
+
+.preview-code code {
+  display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .dialog-footer {

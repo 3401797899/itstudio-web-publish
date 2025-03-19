@@ -1,5 +1,29 @@
 import request from './config'
 
+// 获取配置文件预览
+export function previewConfig() {
+  return request({
+    url: '/domains/preview/',
+    method: 'get'
+  })
+}
+
+// 写入配置文件
+export function writeConfig() {
+  return request({
+    url: '/domains/write/',
+    method: 'post'
+  })
+}
+
+// 重启Cloudflared服务
+export function restartCloudflared() {
+  return request({
+    url: '/domains/restart/',
+    method: 'post'
+  })
+}
+
 // 获取域名列表
 export function getDomainList() {
   return request({
