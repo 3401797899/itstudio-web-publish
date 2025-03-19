@@ -315,3 +315,30 @@ class DomainConfigRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
             logger.error(f"Failed to delete DNS records: {str(e)}")
         
         instance.delete()
+
+class DomainConfigRestartView(generics.GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            # 获取最新的配置
+            config = ConfigurationModel.objects.latest('updated_at')
+            container_id = config.cloudflared_container_id
+            
+            # 执行Docker重启命令
+            import subprocess
+            result = subprocess.run(['docker', 'restart', container_id], capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                return Response({'message': 'Container restarted successfully'})
+            else:
+                return Response(
+                    {'error': f'Failed to restart container: {result.stderr}'}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        except ConfigurationModel.DoesNotExist:
+            return Response({'error': 'No configuration found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Failed to restart container: {str(e)}")
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ConfigurationView, DomainConfigListCreateView, DomainConfigRetrieveUpdateDestroyView, DomainConfigPreviewView, DomainConfigWriteView
+from .views import ConfigurationView, DomainConfigListCreateView, DomainConfigRetrieveUpdateDestroyView, DomainConfigPreviewView, DomainConfigWriteView, DomainConfigRestartView
 
 urlpatterns = [
     path('config/', ConfigurationView.as_view(), name='configuration'),
@@ -7,4 +7,5 @@ urlpatterns = [
     path('domains/<int:pk>/', DomainConfigRetrieveUpdateDestroyView.as_view(), name='domain-detail'),
     path('domains/preview/', DomainConfigPreviewView.as_view(), name='domain-preview'),
     path('domains/write/', DomainConfigWriteView.as_view(), name='domain-write'),
+    path('domains/restart/', DomainConfigRestartView.as_view(), name='domain-restart'),
 ]
