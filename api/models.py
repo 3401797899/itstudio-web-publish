@@ -18,3 +18,18 @@ class ConfigurationModel(models.Model):
 
     def __str__(self):
         return f'Configuration (Last updated: {self.updated_at})'
+
+class DomainConfig(models.Model):
+    domain = models.CharField(_('Domain'), max_length=255, unique=True)
+    proxy_pass = models.CharField(_('Proxy Pass'), max_length=255)
+    host = models.CharField(_('Host'), max_length=255, blank=True, null=True)
+    note = models.TextField(_('Note'), blank=True, null=True)
+    created_at = models.DateTimeField(_('Created At'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Updated At'), auto_now=True)
+
+    class Meta:
+        verbose_name = _('Domain Configuration')
+        verbose_name_plural = _('Domain Configurations')
+
+    def __str__(self):
+        return self.domain

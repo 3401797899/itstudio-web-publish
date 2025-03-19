@@ -1,7 +1,7 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from .models import ConfigurationModel
-from .serializers import ConfigurationSerializer
+from .models import ConfigurationModel, DomainConfig
+from .serializers import ConfigurationSerializer, DomainConfigSerializer
 
 class ConfigurationView(generics.GenericAPIView):
     serializer_class = ConfigurationSerializer
@@ -27,3 +27,11 @@ class ConfigurationView(generics.GenericAPIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DomainConfigListCreateView(generics.ListCreateAPIView):
+    queryset = DomainConfig.objects.all()
+    serializer_class = DomainConfigSerializer
+
+class DomainConfigRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = DomainConfig.objects.all()
+    serializer_class = DomainConfigSerializer
