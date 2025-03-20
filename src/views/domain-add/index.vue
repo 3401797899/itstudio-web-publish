@@ -116,15 +116,21 @@ const handleDelete = (row, index) => {
       tableData.value.splice(index, 1)
       ElMessage.success('删除成功')
     } catch (error) {
-      ElMessage.error(error.response?.data?.message || '删除失败')
+      if (error.response?.data) {
+        for (let key in error.response.data) {
+          ElMessage.error(error.response.data[key][0]);
+        }
+      } else {
+        ElMessage.error('操作失败')
+      }
     }
-  }).catch(() => {})
+  }).catch(() => { })
 }
 
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
     if (isEdit.value) {
@@ -140,7 +146,13 @@ const handleSubmit = async () => {
     }
     dialogVisible.value = false
   } catch (error) {
-    ElMessage.error(error.response?.data?.message || '操作失败')
+    if (error.response?.data) {
+      for (let key in error.response.data) {
+        ElMessage.error(error.response.data[key][0]);
+      }
+    } else {
+      ElMessage.error('操作失败')
+    }
   }
 }
 
@@ -187,19 +199,8 @@ const resetForm = () => {
       </el-table>
 
       <!-- 添加/编辑对话框 -->
-      <el-dialog
-        v-model="dialogVisible"
-        :title="dialogTitle"
-        width="500px"
-        @close="resetForm"
-      >
-        <el-form
-          ref="formRef"
-          :model="formData"
-          :rules="rules"
-          label-width="100px"
-          label-position="right"
-        >
+      <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" @close="resetForm">
+        <el-form ref="formRef" :model="formData" :rules="rules" label-width="100px" label-position="right">
           <el-form-item label="域名" prop="domain">
             <el-input v-model="formData.domain" placeholder="请输入域名" />
           </el-form-item>
@@ -222,11 +223,7 @@ const resetForm = () => {
       </el-dialog>
 
       <!-- 配置预览对话框 -->
-      <el-dialog
-        v-model="previewDialogVisible"
-        title="配置文件预览"
-        width="800px"
-      >
+      <el-dialog v-model="previewDialogVisible" title="配置文件预览" width="800px">
         <pre class="preview-code"><code v-html="configContent"></code></pre>
       </el-dialog>
     </el-card>
