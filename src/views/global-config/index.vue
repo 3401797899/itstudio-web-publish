@@ -12,7 +12,8 @@ const formData = reactive({
   tencentSecretKey: '',
   tencentSecretId: '',
   cloudflaredContainerId: '',
-  cloudflaredDefaultBehavior: ''
+  cloudflaredDefaultBehavior: '',
+  cloudFlareDomainSuffix: ''
 })
 
 const defaultBehaviorOptions = [
@@ -50,6 +51,9 @@ const rules = {
   ],
   cloudflaredDefaultBehavior: [
     { required: true, message: '请选择默认行为', trigger: 'change' }
+  ],
+  cloudFlareDomainSuffix: [
+    { required: true, message: '请输入CloudFlare域名后缀', trigger: 'blur' }
   ]
 }
 
@@ -69,7 +73,8 @@ const handleSubmit = async () => {
       tencent_secret_key: formData.tencentSecretKey,
       tencent_secret_id: formData.tencentSecretId,
       cloudflared_container_id: formData.cloudflaredContainerId,
-      cloudflared_default_behavior: formData.cloudflaredDefaultBehavior
+      cloudflared_default_behavior: formData.cloudflaredDefaultBehavior,
+      cloudflare_domain_suffix: formData.cloudFlareDomainSuffix
     }
     await updateGlobalConfig(apiData)
     ElMessage.success('配置保存成功')
@@ -90,7 +95,8 @@ const handleSubmit = async () => {
             tencent_secret_key: '腾讯云SecretKey',
             tencent_secret_id: '腾讯云SecretID',
             cloudflared_container_id: 'Cloudflared容器ID',
-            cloudflared_default_behavior: '默认行为'
+            cloudflared_default_behavior: '默认行为',
+            cloudflare_domain_suffix: 'CloudFlare域名后缀'
           }
           errorMessages.push(`${fieldMap[field] || field}：${messages[0]}`)
         }
@@ -120,6 +126,7 @@ onMounted(async () => {
     formData.tencentSecretId = config.tencent_secret_id
     formData.cloudflaredContainerId = config.cloudflared_container_id
     formData.cloudflaredDefaultBehavior = config.cloudflared_default_behavior
+    formData.cloudFlareDomainSuffix = config.cloudflare_domain_suffix
   } catch (error) {
     ElMessage.error('获取配置失败')
   }
@@ -217,6 +224,13 @@ onMounted(async () => {
               :value="option.value"
             />
           </el-select>
+        </el-form-item>
+
+        <el-form-item label="CloudFlare域名后缀" prop="cloudFlareDomainSuffix">
+          <el-input
+            v-model="formData.cloudFlareDomainSuffix"
+            placeholder="请输入CloudFlare域名后缀"
+          />
         </el-form-item>
 
         <el-form-item>
