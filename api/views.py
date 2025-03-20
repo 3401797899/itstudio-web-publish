@@ -84,20 +84,16 @@ class DomainConfigPreviewView(generics.GenericAPIView):
         
         # 为每个域名生成配置
         for domain in domains:
+            _domain = domain.domain
+            _sub_domain, _main_domain = split_domain(_domain)
+            domain_config = {
+                'hostname': f"{_sub_domain}{config.cloudflare_domain_suffix}",
+                'service': "http://" + domain.proxy_pass
+            }
             if domain.host:
                 # 如果有host，添加httpHostHeader
-                domain_config = {
-                    'hostname': domain.domain,
-                    'service': "http://" + domain.proxy_pass,
-                    'originRequest': {
-                        'httpHostHeader': domain.host
-                    }
-                }
-            else:
-                # 如果没有host，使用基本配置
-                domain_config = {
-                    'hostname': domain.domain,
-                    'service': "http://" + domain.proxy_pass
+                domain_config['originRequest'] = {
+                    'httpHostHeader': domain.host
                 }
             tunnel_config['ingress'].append(domain_config)
         
