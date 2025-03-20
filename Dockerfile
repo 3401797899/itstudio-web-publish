@@ -1,5 +1,5 @@
-# 使用Alpine作为基础镜像
-FROM python:3.9-alpine
+# Alpine 无法支持使用系统的docker
+FROM python:3.9
 
 # 设置工作目录
 WORKDIR /app
@@ -12,4 +12,4 @@ RUN pip install -r requirements.txt
 EXPOSE 8000
 
 # 启动命令
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8090"]
+CMD ["bash", "start-server.sh"]
