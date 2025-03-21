@@ -98,11 +98,11 @@ class DNSPodClient:
             logger.error(f"Failed to check domain {domain}: {str(err)}")
             raise
     
-    def update_record_by_domain(self, domain, record_type, value):
+    def update_record_by_domain(self, old_domain, domain, record_type, value):
         """通过域名前缀更新记录"""
         try:
+            record_id = self.check_domain_has_record(old_domain) if old_domain else None
             sub_domain, main_domain = split_domain(domain)
-            record_id = self.check_domain_has_record(domain)
             if record_id:
                 return self.update_record(main_domain, record_id, sub_domain, record_type, value)
             else:

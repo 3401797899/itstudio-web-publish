@@ -81,10 +81,10 @@ class CloudflareClient:
             logger.error(f"CloudFlare: Failed to check domain has record: {str(e)}")
             raise e
     
-    def update_record_by_domain(self, sub_domain, content, type='A'):
+    def update_record_by_domain(self, old_sub_domain, sub_domain, content, type='A'):
         """通过域名前缀更新记录"""
         try:
-            record_id = self.check_domain_has_record(sub_domain)
+            record_id = self.check_domain_has_record(old_sub_domain) if old_sub_domain else None
             if record_id:
                 return self.update_record(record_id, sub_domain, content, type)
             else:

@@ -54,10 +54,10 @@ class DomainConfigListCreateView(generics.ListCreateAPIView):
             # 更新CloudFlare DNS记录
             msg = "更新CloudFlare DNS记录"
             cf_content = f"{config.cloudflare_tunnel_id}.cfargotunnel.com"
-            cf_client.update_record_by_domain(sub_domain=f"{sub_domain}-it", content=cf_content, type='CNAME')
+            cf_client.update_record_by_domain(old_sub_domain=None, sub_domain=f"{sub_domain}-it", content=cf_content, type='CNAME')
             # 更新DNSPod DNS记录
             msg = "更新DNSPod DNS记录"
-            dnspod_client.update_record_by_domain(domain=domain, record_type='CNAME', value='vhost.itstudio.club')
+            dnspod_client.update_record_by_domain(old_domain=None, domain=domain, record_type='CNAME', value='vhost.itstudio.club')
             # 更新数据库
             instance = serializer.save()
         except Exception as e:
@@ -166,16 +166,23 @@ class DomainConfigRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
         try:
             domain = serializer.validated_data['domain']
             sub_domain, main_domain = split_domain(domain)
+            old_sub_domain, old_main_domain = split_domain(original_instance.domain)
             cf_client = CloudflareClient()
             dnspod_client = DNSPodClient()
             config = ConfigurationModel.objects.latest('updated_at')
             # 更新CloudFlare DNS记录
             msg = "更新CloudFlare DNS记录"
             cf_content = f"{config.cloudflare_tunnel_id}.cfargotunnel.com"
-            cf_client.update_record_by_domain(sub_domain=f"{sub_domain}-it", content=cf_content, type='CNAME')
+            cf_client.update_record_by_domain(
+                old_sub_domain=f"{old_sub_domain}-it",
+                sub_domain=f"{sub_domain}-it",
+                content=cf_content,
+                type='CNAME'
+            )
             # 更新DNSPod DNS记录
             msg = "更新DNSPod DNS记录"
             dnspod_client.update_record_by_domain(
+                old_domain=original_instance.domain,
                 domain=domain,
                 record_type='CNAME',
                 value='vhost.itstudio.club'
