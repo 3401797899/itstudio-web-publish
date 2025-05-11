@@ -1,91 +1,160 @@
 <template>
   <div class="login-container">
-    <el-card class="login-card">
-      <template #header>
-        <h2 class="login-title">系统登录</h2>
-      </template>
-      <el-form :model="loginForm" :rules="rules" ref="loginFormRef">
-        <el-form-item prop="username">
+    <div class="login-box">
+      <h2>系统登录</h2>
+      <form @submit.prevent="handleLogin" style="width: 100%;">
+        <div class="form-group">
           <el-input
-            v-model="loginForm.username"
-            placeholder="请输入用户名"
-            :prefix-icon="User"
-          />
-        </el-form-item>
-        <el-form-item prop="password">
-          <el-input
-            v-model="loginForm.password"
+            class="custom-el-input"
             type="password"
+            v-model="password"
             placeholder="请输入密码"
-            :prefix-icon="Lock"
-            show-password
+            required
           />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" class="login-button" @click="handleLogin">登录</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        </div>
+        <button type="submit" :disabled="loading">
+          {{ loading ? '登录中...' : '登录' }}
+        </button>
+      </form>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref, reactive } from 'vue'
-import { User, Lock } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+<script>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { login } from '../../api/auth'
+import { ElMessage } from 'element-plus'
 
-const router = useRouter()
-const loginFormRef = ref(null)
+export default {
+  name: 'Login',
+  setup() {
+    const router = useRouter()
+    const password = ref('')
+    const loading = ref(false)
 
-const loginForm = reactive({
-  username: '',
-  password: ''
-})
-
-const rules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度应在3-20个字符之间', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度应在6-20个字符之间', trigger: 'blur' }
-  ]
-}
-
-const handleLogin = () => {
-  loginFormRef.value.validate((valid) => {
-    if (valid) {
-      // TODO: 实现实际的登录逻辑
-      ElMessage.success('登录成功')
-      router.push('/')
+    const handleLogin = async () => {
+      try {
+        loading.value = true
+        const result = await login(password.value)
+        
+        if (result.success) {
+          router.push('/')
+        } else {
+          ElMessage.error('登录失败：' + result.error)
+        }
+      } catch (error) {
+        ElMessage.error('登录失败：' + (error.response?.data?.error || error.message))
+      } finally {
+        loading.value = false
+      }
     }
-  })
+
+    return {
+      password,
+      loading,
+      handleLogin
+    }
+  }
 }
 </script>
 
 <style scoped>
 .login-container {
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #e3f0ff 0%, #f8fbff 100%);
 }
 
-.login-card {
-  width: 400px;
+.login-box {
+  width: 370px;
+  padding: 40px 32px 32px 32px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(27, 151, 249, 0.10), 0 1.5px 6px 0 rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.login-title {
+h2 {
   text-align: center;
-  color: #409EFF;
-  margin: 0;
+  margin-bottom: 32px;
+  color: #1B97F9;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
-.login-button {
+.form-group {
   width: 100%;
+  margin-bottom: 24px;
 }
-</style>
+
+/* 深度选择器适配 el-input 内部结构 */
+.custom-el-input {
+  --el-input-bg-color: #f7fbff;
+  --el-input-border-color: #e3eaf2;
+  --el-input-hover-border-color: #1B97F9;
+  --el-input-focus-border-color: #1B97F9;
+  --el-input-placeholder-color: #b0b8c9;
+  --el-input-text-color: #333;
+  width: 100%;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+/* 兼容性写法，进一步美化 */
+.custom-el-input .el-input__wrapper {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  background: #f7fbff !important;
+  border: 1.5px solid #e3eaf2 !important;
+  transition: border-color 0.2s;
+}
+
+.custom-el-input .el-input__wrapper:hover,
+.custom-el-input .el-input__wrapper.is-focus {
+  border-color: #1B97F9 !important;
+  background: #fff !important;
+}
+
+.custom-el-input .el-input__inner {
+  color: #333 !important;
+  font-size: 16px !important;
+  background: transparent !important;
+}
+
+.custom-el-input .el-input__inner::placeholder {
+  color: #b0b8c9 !important;
+  font-size: 15px;
+}
+
+button {
+  width: 100%;
+  padding: 13px 0;
+  background: linear-gradient(90deg, #1B97F9 0%, #4fc3f7 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px 0 rgba(27, 151, 249, 0.10);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+button:disabled {
+  background: #b3d8fb;
+  cursor: not-allowed;
+  color: #fff;
+}
+
+button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #1B97F9 0%, #1976d2 100%);
+  box-shadow: 0 4px 16px 0 rgba(27, 151, 249, 0.15);
+}
+</style> 

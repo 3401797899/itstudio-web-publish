@@ -1,11 +1,20 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../../store/auth'
 import { House, Setting, Document, Expand, Fold, ArrowDown, User } from '@element-plus/icons-vue'
 
 const isCollapse = ref(false)
+const router = useRouter()
+const { logout } = useAuth()
 
 const handleCollapse = () => {
     isCollapse.value = !isCollapse.value
+}
+
+const handleLogout = async () => {
+    await logout()
+    router.push('/login')
 }
 </script>
 
@@ -46,7 +55,7 @@ const handleCollapse = () => {
                 <div class="header-left">
                     <el-button type="text" @click="handleCollapse">
                         <el-icon>
-                            <component :is="isCollapse ? 'Expand' : 'Fold'" />
+                            <component :is="isCollapse ? Expand : Fold" />
                         </el-icon>
                     </el-button>
                 </div>
@@ -63,8 +72,7 @@ const handleCollapse = () => {
                         </span>
                         <template #dropdown>
                             <el-dropdown-menu>
-                                <el-dropdown-item>个人信息</el-dropdown-item>
-                                <el-dropdown-item>退出登录</el-dropdown-item>
+                                <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown>
