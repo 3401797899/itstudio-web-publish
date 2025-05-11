@@ -4,3 +4,4 @@ django-cors-headers==4.3.1
 tencentcloud-sdk-python==3.0.936
 cloudflare==4.1.0
 pyyaml==6.0.2
+python-dotenv==1.0.0

@@ -1,18 +1,33 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from rest_framework.views import APIView
+from django.conf import settings
 from .models import ConfigurationModel, DomainConfig
 from .serializers import ConfigurationSerializer, DomainConfigSerializer
 from .utils.cloudflare import CloudflareClient
 from .utils.dnspod import DNSPodClient
 from .utils.common import split_domain
 from tencentcloud.dnspod.v20210323 import models
-from django.conf import settings
 import logging
 import yaml
 import os
 
 logger = logging.getLogger(__name__)
+
+class LoginView(APIView):
+    def post(self, request):
+        password = request.data.get('password')
+        if password == settings.ADMIN_PASSWORD:
+            request.session['is_authenticated'] = True
+            return Response({'message': '登录成功'})
+        return Response({'error': '密码错误'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class LogoutView(APIView):
+    def post(self, request):
+        # 清除session中的认证信息
+        request.session.flush()
+        return Response({'message': '登出成功'})
 
 class ConfigurationView(generics.GenericAPIView):
     serializer_class = ConfigurationSerializer
